@@ -49,8 +49,17 @@ exports.createBlogController = async (req, res) => {
     }
 
     const newBlog = new blogModel({ title, description, image, user });
+
+    exisitingUser.blogs.push(newBlog._id);
+    exisitingUser
+      .save()
+      .then(() => {
+        console.log("New blog ID added to user's blogs array");
+      })
+      .catch((err) => {
+        console.error("Error saving user:", err);
+      });
     
-    exisitingUser.blogs.push(newBlog);
     await newBlog.save();
     return res.status(201).send({
       success: true,
@@ -144,15 +153,8 @@ exports.deleteBlogController = async (req, res) => {
 //GET USER BLOG
 exports.userBlogControlller = async (req, res) => {
   try {
-    const userBlog = await userModel.findById(req.params.id, function (err, user) {
-      // error checks
-      if (err) { return res.status(500).json({ error: err }); }
-      if (!course) { return res.sendStatus(404); }
-      // populate the document, return it
-        console.log(course);
-    }).populate(user,  { path:"blog", model:"blog" });
-
-    //const userBlog = await userModel.findById(req.params.id).populate("blogs");
+   
+    const userBlog = await userModel.findOne({'_id': req.params.id}).populate("blogs").exec();
 
     if (!userBlog) {
       return res.status(404).send({
